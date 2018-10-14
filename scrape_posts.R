@@ -11,10 +11,10 @@ index <- read_html("https://correlaid.org/blog/")
 
 index <- index %>%
   html_nodes(".row a") %>% 
-  html_attr('href') 
+  html_attr('href') # extract all links from the index page
 
-urls <- index[grepl("posts", index)]
-names <- str_replace(urls, "https://correlaid.org/blog/posts/", "")
+urls <- index[grepl("posts", index)] # filter to extract only links to blogposts
+names <- str_replace(urls, "https://correlaid.org/blog/posts/", "") # isolate name of blogposts
 
 # step 2: write function to get meta_data for the blogpost
 
@@ -25,15 +25,16 @@ get_meta_information <- function(url){
   webpage <- read_html(html_session(url))
   
   #Gather meta information
-  title <- html_text(html_nodes(webpage, 'h2'))
-  subtitle <- html_text(html_nodes(webpage, '.subheading'))
-  description <- html_text(html_nodes(webpage, '#small-header p')[1])
+  title <- html_text(html_nodes(webpage, 'h2')) # title 
+  subtitle <- html_text(html_nodes(webpage, '.subheading')) # subtitle
+  description <- html_text(html_nodes(webpage, '#small-header p')[1]) #description long
   
-  written_by <- unlist(strsplit(description," "))[3]
+  written_by <- unlist(strsplit(description," "))[3] # author
   
   full_date <- paste(unlist(strsplit(description," "))[5:7], collapse = " ")
-  full_date_clean <- as.Date(full_date, format = "%d %B, %Y")
+  full_date_clean <- as.Date(full_date, format = "%d %B, %Y") # date
   
+  # in some blogposts the date is formated in English. For those I have to change the locale
   if(is.na(full_date_clean)){
     Sys.setlocale("LC_TIME", "English") #set locale to English
     full_date_clean <- as.Date(full_date, format = "%d %B, %Y")
@@ -44,12 +45,13 @@ get_meta_information <- function(url){
   
   header_picture <- webpage %>% html_nodes('#small-header') %>% xml_attr("style")
   header_picture_name <- str_split(header_picture, "posts/")[[1]][2]
-  header_picture_name <- gsub("'", "", header_picture_name)
+  header_picture_name <- gsub("'", "", header_picture_name) # extract only name of the picture
   
+  #format the meta information in markdown style
   meta_text <- paste0("---", 
                       "\n title: \"", title,"\"",
                       "\n date: ", full_date_clean,
-                      "\n image: ", header_picture_name,
+                      "\n image: \"", header_picture_name,"\"",
                       "\n summary: \"", subtitle,"\"",
                       "\n author: \"", written_by,"\"",
                       "\n---")
@@ -84,11 +86,11 @@ clean_md <- function(filename, meta_info){
   md_text <- gsub("<div>", "", md_text)
   md_text <- gsub("</div>", "", md_text)
   md_text <- gsub("<div class=\"post-content\">", "", md_text)
-  md_text <- gsub("https://correlaid.org/media/img/posts/", "", md_text)
+  md_text <- gsub("https://correlaid.org/media/img/posts/", "", md_text) #clean the path of the images
   
   writeLines(c(meta_info, md_text), md_file)
   
-  close(md_file, encoding="latin1")
+  close(md_file, encoding="latin1") #important: Change the encoding
 }
 
 
