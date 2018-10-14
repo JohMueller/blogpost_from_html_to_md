@@ -21,7 +21,7 @@ names <- str_replace(urls, "https://correlaid.org/blog/posts/", "")
 
 get_meta_information <- function(url){
   
-  #Reading the HTML code from the website
+  #Reading the HTML from the website
   webpage <- read_html(html_session(url))
   
   #Gather meta information
@@ -84,7 +84,7 @@ clean_md <- function(filename, meta_info){
 }
 
 
-# Workflow
+# Run functions for all blogposts
 
 for(i in 1:length(urls)){
   url <- urls[i]
