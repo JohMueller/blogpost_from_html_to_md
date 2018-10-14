@@ -34,6 +34,14 @@ get_meta_information <- function(url){
   full_date <- paste(unlist(strsplit(description," "))[5:7], collapse = " ")
   full_date_clean <- as.Date(full_date, format = "%d %B, %Y")
   
+  if(is.na(full_date_clean)){
+    Sys.setlocale("LC_TIME", "English") #set locale to English
+    full_date_clean <- as.Date(full_date, format = "%d %B, %Y")
+    Sys.setlocale("LC_TIME", "German") #set locale back to German
+  }
+  full_date_clean <- format(full_date_clean, format = "%Y-%m-%dT%H:%M:%S+02:00")
+  
+  
   header_picture <- webpage %>% html_nodes('#small-header') %>% xml_attr("style")
   header_picture_name <- str_split(header_picture, "posts/")[[1]][2]
   header_picture_name <- gsub("'", "", header_picture_name)
@@ -41,7 +49,7 @@ get_meta_information <- function(url){
   meta_text <- paste0("---", 
                       "\n title: \"", title,"\"",
                       "\n date: ", full_date_clean,
-                      "\n image: /images/blog/", header_picture_name,
+                      "\n image: ", header_picture_name,
                       "\n summary: \"", subtitle,"\"",
                       "\n author: \"", written_by,"\"",
                       "\n---")
@@ -69,18 +77,18 @@ html_to_md <- function(url, filename){
 # Step 4: Write function to add meta data to .md and clean it up
   
 clean_md <- function(filename, meta_info){
-  md_file <-file(paste0(filename, ".md"))
+  md_file <-file(paste0(filename, ".md"), encoding="UTF-8")
   
-  md_text <- readLines(md_file)
+  md_text <- readLines(md_file, encoding="UTF-8")
   
   md_text <- gsub("<div>", "", md_text)
   md_text <- gsub("</div>", "", md_text)
   md_text <- gsub("<div class=\"post-content\">", "", md_text)
-  md_text <- gsub("https://correlaid.org/media/img/posts/", "/images/blog/", md_text)
+  md_text <- gsub("https://correlaid.org/media/img/posts/", "", md_text)
   
   writeLines(c(meta_info, md_text), md_file)
   
-  close(md_file)
+  close(md_file, encoding="latin1")
 }
 
 
